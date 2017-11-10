@@ -1,0 +1,281 @@
+---
+title: "Práctica Derivadas"
+author: "Alejandro Gómez de Miguel"
+date: "7/11/2017"
+output:
+  pdf_document: default
+  html_document: default
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Llamamos a los paquetes necesarios para realizar la práctica:
+
+```{r}
+library(mosaicCalc)
+library(mosaic)
+```
+
+### Apartado 1:
+
+```{r}
+derivada_1 <- mosaicCalc::D(3 * x^2 - 2 * x + 4 ~ x)
+derivada_1
+```
+
+Evaluación en función de los puntos
+
+
+```{r}
+derivada_1(-6)
+```
+```{r}
+derivada_1(-4)
+```
+
+```{r}
+derivada_1(-3)
+```
+
+```{r}
+derivada_1(-2)
+```
+
+```{r}
+derivada_1(0)
+```
+
+```{r}
+derivada_1(2)
+```
+
+```{r}
+derivada_1(3)
+```
+
+```{r}
+derivada_1(4)
+```
+
+```{r}
+derivada_1(6)
+```
+
+Gráficamente sería:
+
+```{r}
+plotFun(derivada_1(x) ~ x, x.lim = range(0, 10))
+```
+
+La respuesta correcta es la "B) A positive sloping line."
+
+### Apartado 2:
+
+```{r}
+funcion_2 <- (5 * exp(.2 * x) ~ x)
+derivada_2 <- mosaicCalc::D(5 * exp(.2 * x) ~ x)
+derivada_2
+```
+
+```{r}
+derivada_2(-5)
+```
+
+```{r}
+derivada_2(-2)
+```
+
+```{r}
+derivada_2(-1)
+```
+
+```{r}
+derivada_2(0)
+```
+
+```{r}
+derivada_2(1)
+```
+
+```{r}
+derivada_2(2)
+```
+
+```{r}
+derivada_2(5)
+```
+
+Gráficamente sería:
+
+```{r}
+plotFun(funcion_2, x.lim = range(0, 10)) # original
+```
+
+```{r}
+plotFun(derivada_2(x) ~ x, x.lim=range(0,10)) # derivada
+```
+
+La respuesta correcta es la "B) Same exponential shape, but different initial values."
+
+
+### Apartado 3:
+
+```{r}
+derivada_3 <- mosaicCalc::D(exp(- (x ^ 2)) ~ x)
+derivada_3
+```
+
+```{r}
+plotFun(derivada_3(x) ~ x, x.lim = range(-2, 2))
+```
+
+La respuesta correcta es la "C) A positive wave followed by a negative wave."
+
+### Apartado 4:
+
+```{r}
+derivada_4 <- mosaicCalc::D(fred ^ 2 ~ ginger)
+```
+
+La respuesta es "A) 0 everywhere"
+
+
+### Apartado 5:
+
+```{r}
+derivada_5 <- mosaicCalc::D(cos(2 * t) ~ t)
+derivada_5
+```
+
+La segunda derivada:
+
+```{r}
+derivada_5_2 <- mosaicCalc::D(derivada_5(t) ~ t) 
+derivada_5_2
+```
+
+La tercera derivada: (Respuesta: 8sin(2t))
+
+```{r}
+derivada_5_3 <- mosaicCalc::D(derivada_5_2(t) ~ t)
+derivada_5_3
+```
+
+La cuarta derivada: (Respuesta: 16cos(2t))
+
+```{r}
+derivada_5_4 <- mosaicCalc::D(derivada_5_3(t) ~ t)
+derivada_5_4 
+```
+
+### Apartado 6:
+
+```{r}
+derivada_6 <- mosaicCalc::D(cos(2 * x ^ 2) - x ~ x + x + x + x)
+derivada_6
+```
+
+```{r}
+curve(derivada_6, 0, 5)
+```
+
+Las respuestas correctas son: 
+
+"C) A cosine whose amplitude increasesand whose perioddecreases as t gets bigger."
+
+¿Cuarta derivada?
+
+"C) Cos, sin, squaring, multiplication and addition"
+
+### Apartado 7:
+
+```{r}
+funcion_7 <- function(x, y) x * sin(y)
+```
+
+Derivada respecto de x:
+
+```{r}
+derivada_7x  <- mosaicCalc::D(funcion_7(x, y) ~ x)
+derivada_7x
+```
+
+Derivada respecto de y:
+
+```{r}
+derivada_7y  <- mosaicCalc::D(funcion_7(x, y) ~ y)
+derivada_7y
+```
+
+Segunda derivada respecto de x:
+
+```{r}
+derivada_7xx  <- mosaicCalc::D(derivada_7x(x, y) ~ x)
+derivada_7xx
+```
+
+Segunda derivada respecto de y:
+
+```{r}
+derivada_7yy  <- mosaicCalc::D(derivada_7y(x, y) ~ y)
+derivada_7yy
+```
+
+Segunda derivada respecto de x, y:
+
+```{r}
+derivada_7xy <- mosaicCalc::D(derivada_7x(x, y) ~ y)
+derivada_7xy
+```
+
+Segunda derivada respecto de y, x
+
+```{r}
+derivada_7yx <- mosaicCalc::D(derivada_7y(x, y) ~ x)
+derivada_7yx
+```
+
+Pregunta: Las derivadas con respecto de x e y son idénticas. ¿Verdadero o falso?
+
+Falso, el resultado de aplicar los mismos valores son distintos, por tanto, no es cierto.
+
+```{r}
+derivada_7x(0, 10)
+```
+
+```{r}
+derivada_7y(0, 10)
+```
+
+Pregunta: Las segundas derivadas con respecto x e y son idénticas.
+¿Verdadero o falso?
+
+Falso, no pueden ser indenticas, el resultado no es el mismo al aplicar los mismos valores en ambas derivadas.
+
+```{r}
+derivada_7xx(30, 30)
+```
+
+```{r}
+derivada_7yy(30, 30)
+```
+
+Pregunta: Dos derivadas mezcladas, es decir, la segunda derivada de x respecto de y, y la segunda derivada de y respecto de x, son identicas. ¿Verdadero o falso?
+
+Teoricamente sí, deben ser idénticas, independientemente del sentido del proceso de derivación.
+
+
+De forma práctica también se puede apreciar: 
+
+
+```{r}
+derivada_7xy(30, 30)
+```
+
+```{r}
+derivada_7yx(30, 30)
+```
+
