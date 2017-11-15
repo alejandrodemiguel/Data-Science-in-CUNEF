@@ -1,0 +1,206 @@
+---
+title: "Practica1_GenderDiscrimination"
+author: "Alejandro Gomez de Miguel"
+date: "31/10/2017"
+output:
+  pdf_document: default
+  word_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Gender Discrimination
+
+Se establece el directorio de trabajo:
+
+```{r}
+setwd("~/Documents/CUNEF - Data Science/1º Semestre/Técnicas de Clasificación/Práctica 1 - Gender Discrimination")
+```
+
+
+```{r}
+gender <- read.csv('GenderDiscrimination.csv', header = TRUE, sep = ',') 
+```
+
+Comprobamos el encabezado de gender.
+
+```{r}
+head(gender, 5)
+```
+
+Definimos una muestra aleatoria de aprendizaje del arbol.
+
+```{r}
+set.seed(1234)
+```
+
+El colectivo sobre el que se va a realizar la muestra es nrow(gender), la muestra es el 70% del colectivo.
+
+```{r}
+train <- sample(nrow(gender), 0.7 * nrow(gender))
+```
+
+Escogemos las filas que la muestra aleatoria nos ha señalado para el entrenamiento.
+
+```{r}
+gender.train <- gender[train,]
+```
+
+Para validar, utilizaremos el 30% sobrante.
+
+```{r}
+gender.validate <- gender[-train,]
+```
+
+Podemos comprobar que la muestra esta bien compensada por los criterios que se han definido previamente:
+
+```{r}
+table(gender.train$Gender) # La suma de Female y Male es aproximadamente el 70% sobre el total
+table(gender.validate$Gender) # La suma de Female y Male es aproximadamente el 30% sobre el total
+```
+
+Cargamos la libreria rpart:
+
+```{r}
+library(rpart)
+```
+
+Estimamos el arbol: la variable explicada es 'Gender' e incluyo como variables explicativas el resto (Salary y Experience).
+Mediante parms establecemos una lista de parametros para presentar la informacion.
+
+```{r}
+gender_arbol <- rpart(Gender ~ ., 
+                      data = gender.train,
+                      method = "class",
+                      parms = list(split = "information"))
+print(gender_arbol)
+```
+
+El tamaño de la muestra de entrenamiento es 145, correspondiente al 70% de la muestra total.
+
+La estructura del contenido de print(gender_arbol) es: 
+
+1. Que tipo de nodo es (i.e. root) y la posicion que ocupa (i.e. root).
+2. El criterio de división/clasificación (i.e. Salary < 88900).
+3. El tamaño n correspondiente de la division (i.e. 113).
+4. La de funcion de perdida (i.e. 26).
+5. El resultado (Female o Male) resultado de la prediccion (i.e. Female).
+6. El reparto de mujeres y hombres asociado a la prediccion (i.e. (0.7699115 0.2300885)).
+
+El nodo raiz nos ofrece informacion sobre el porcentaje de hombres y mujeres (i.e. 66.8% Female y 33.1% Male).
+
+```{r}
+summary(gender_arbol) 
+```
+
+
+CP es la complejidad parametrica, se puede observar la tabla en el resumen.
+La funcion summary ofrece informacion adicional a la anterior.
+
+```{r}
+gender_arbol$cptable
+```
+
+El parametro de complejidad elegido que minimiza el error relativo es 0.01. Este sera usado para podar el arbol.
+
+```{r}
+plotcp(gender_arbol)
+```
+
+```{r}
+gender_arbol.podado <- prune(gender_arbol, cp = 0.01000000)
+```
+
+
+Cargamos la librería para representar graficamente el árbol.
+
+```{r}
+library(rpart.plot)
+```
+
+Arbol de decision: 
+
+```{r}
+prp(gender_arbol.podado, type = 2, extra = 104,
+    fallen.leaves = TRUE, main="Arbol de Decision")
+```
+
+La funcion prp sirve para establecer las distintas opciones de la representación gráfica del arbol.
+
+'type=2' establece la etiquetas de división debajo de cada nodo.
+
+'extra = 104' incluye las probabilidades de cada clase junto con el porcentaje de los casos en cada nodo.
+
+'fallen.leaves = TRUE' dibuja los nodos terminales en la parte inferior del arbol.
+
+Sobre el arbol podado se predice, con la muestra de validación y bajo el tipo "clasificación'.
+
+```{r}
+gender_arbol.pred <- predict(gender_arbol.podado, gender.validate, type = "class") 
+```
+
+```{r}
+gender_arbol.perf <- table(gender.validate$Gender, gender_arbol.pred,
+                    dnn = c("Real", "Prediccion"))
+```
+
+Prediccion:
+
+```{r}
+gender_arbol.perf
+```
+
+La muestra de validacion incluye 38 mujeres y 25 hombres. La prediccion clasifica 11 hombres que en realidad son mujeres, y 12 mujeres que en realidad son hombres. El error de prediccion es bastante grande. En cualquier caso, los resultados varian en funcion a la semilla que se establezca inicialmente. 
+
+Se carga una nueva libreria: 
+
+```{r}
+library(partykit)
+```
+
+```{r}
+plot(as.party(gender_arbol.podado)) 
+```
+
+Se realiza el arbol de inferencia condicional:
+
+```{r}
+fit.ctree <- ctree(Gender~., data= gender.train)
+```
+
+```{r}
+plot(fit.ctree, main="Arbol de Inferencia Condicional")
+```
+
+La diferencia con respecto al arbol anterior es que mediante el metodo de inferencia condicional se reduce el numero de nodos terminales. En el primer caso se concluia con 4 nodos y en este caso con 3 nodos es suficiente.
+
+```{r}
+ctree.pred <- predict(fit.ctree, gender.validate, type="response")
+
+ctree.perf <- table(gender.validate$Gender, ctree.pred,
+                    dnn=c("Actual", "Predicted"))
+ctree.perf
+```
+
+Hay 8 hombres que se han identificado como mujeres en la prediccion, y 15 mujeres que se han identificado como hombres. Frente a la prediccion anterior el error es el mismo, comete fallos de identificacion en 23 individuos.
+
+### Interpretacion y conclusion de los arboles de decision
+
+De la muestra de apendizaje bajo el filtro 'Salario', aquellos que tienen un salario superior a 92000 son 77% hombres y 23% mujeres, es decir, hay individuos (mayoritariamente hombres) que tienen un salario superior a 92000 euros independientemente de su experiencia laboral.
+
+Por otro lado, cuando el salario es menor que 92000 euros la experiencia es el factor determinante.
+
+Cuando la experiencia es mayor o igual a 6 años y medio se clasifica como mujer, representando un 63% de la muestra (90% mujeres y 10% hombres). Es decir el 56.7% de la muestra son mujeres con un salario inferior a 92000 euros y una experiencia mayor o igual a 6 años y medio.
+
+Cuando la experiencia es inferior a 6 años y medio aparece un nodo filtrado por una experiencia menor, o mayor o igual a 4 años y medio, pero siempre menor a 6 años y medio.
+
+El primer hecho a destacar es la existencia de individuos que tienen un suelo mayor a 92000 euros sin tener en cuenta su experencia, y que estos individuos son 77% hombres y 23% mujeres, lo cual demuestra cierta discriminacion, aunque se desconocen los cargos de los individuos.
+
+Por otro lado, segun el arbol de decision, en la muestra casi no existen hombres con una experiencia laboral superior a 6 años y medio con un sueldo inferior a 92000 (tan solo un 6.3% de la muestra).
+
+Sin embargo, si existe un gran porcentaje de mujeres con una experencia mayor a 6 años y medio y sueldos inferiores a 92000 euros (56.7% de la muestra).
+
+Este hecho puede llevar a considerar que la experiencia en las mujeres no es un determinante clave para acceder a mejores sueldos.
